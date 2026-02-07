@@ -1,0 +1,22 @@
+
+# Large data files
+Data/
+*.csv
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Virtual environment
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
