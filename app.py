@@ -40,9 +40,9 @@ st.markdown("""
 @st.cache_resource
 def load_models():
     try:
-        lr_model = joblib.load('models/lr_fraud_detector.pkl')
-        rf_model = joblib.load('models/rf_fraud_detector.pkl')
-        scaler = joblib.load('models/scaler.pkl')
+        lr_model = joblib.load('Models/lr_fraud_detector.pkl')
+        rf_model = joblib.load('Models/rf_fraud_detector.pkl')
+        scaler = joblib.load('Models/scaler.pkl')
         return lr_model, rf_model, scaler
     except Exception as e:
         st.error(f"Error loading models: {e}")
