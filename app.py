@@ -507,14 +507,95 @@ elif page == "📁 Batch Prediction":
                     
                     fraud_count = (predictions == 1).sum()
                     legitimate_count = (predictions == 0).sum()
+                    high_risk_count = (df['Risk_Level'] == 'HIGH').sum()
+                    medium_risk_count = (df['Risk_Level'] == 'MEDIUM').sum()
+                    low_risk_count = (df['Risk_Level'] == 'LOW').sum()
                     
-                    col1, col2, col3 = st.columns(3)
+                    st.markdown("### 📊 Summary Metrics")
+                    col1, col2, col3, col4 = st.columns(4)
                     with col1:
-                        st.metric("📋 Total", len(df))
+                        st.metric("📋 Total Transactions", len(df))
                     with col2:
-                        st.metric("🔴 Fraudulent", fraud_count)
+                        st.metric("🔴 Fraudulent", fraud_count, 
+                                 delta=f"{fraud_count/len(df)*100:.2f}%")
                     with col3:
-                        st.metric("🟢 Legitimate", legitimate_count)
+                        st.metric("🟢 Legitimate", legitimate_count,
+                                 delta=f"{legitimate_count/len(df)*100:.2f}%")
+                    with col4:
+                        avg_fraud_prob = df['Fraud_Probability'].mean()
+                        st.metric("📊 Avg Fraud Prob", f"{avg_fraud_prob:.2f}%")
+                    
+                    st.markdown("---")
+                    
+                    # Visualizations
+                    col_viz1, col_viz2 = st.columns(2)
+                    
+                    with col_viz1:
+                        st.markdown("#### 🎯 Prediction Distribution")
+                        fig1, ax1 = plt.subplots(figsize=(8, 6))
+                        
+                        # Pie chart for predictions
+                        sizes = [legitimate_count, fraud_count]
+                        labels = ['Legitimate', 'Fraudulent']
+                        colors = ['#10b981', '#ef4444']
+                        explode = (0, 0.1)
+                        
+                        ax1.pie(sizes, explode=explode, labels=labels, colors=colors,
+                               autopct='%1.1f%%', startangle=90, textprops={'fontsize': 12, 'weight': 'bold'})
+                        ax1.set_title(f'Transaction Classification\n({len(df)} total)', 
+                                     fontsize=13, fontweight='bold')
+                        
+                        plt.tight_layout()
+                        st.pyplot(fig1)
+                    
+                    with col_viz2:
+                        st.markdown("#### ⚡ Risk Level Distribution")
+                        fig2, ax2 = plt.subplots(figsize=(8, 6))
+                        
+                        # Bar chart for risk levels
+                        risk_data = [high_risk_count, medium_risk_count, low_risk_count]
+                        risk_labels = ['HIGH', 'MEDIUM', 'LOW']
+                        risk_colors = ['#ef4444', '#f59e0b', '#10b981']
+                        
+                        bars = ax2.bar(risk_labels, risk_data, color=risk_colors, alpha=0.8)
+                        ax2.set_ylabel('Number of Transactions', fontsize=11, fontweight='bold')
+                        ax2.set_title('Risk Level Breakdown', fontsize=13, fontweight='bold')
+                        ax2.grid(alpha=0.3, axis='y')
+                        
+                        # Add value labels on bars
+                        for bar, val in zip(bars, risk_data):
+                            height = bar.get_height()
+                            ax2.text(bar.get_x() + bar.get_width()/2., height,
+                                    f'{int(val)}\n({val/len(df)*100:.1f}%)',
+                                    ha='center', va='bottom', fontweight='bold', fontsize=10)
+                        
+                        plt.tight_layout()
+                        st.pyplot(fig2)
+                    
+                    # Fraud probability distribution
+                    st.markdown("---")
+                    st.markdown("#### 📈 Fraud Probability Distribution")
+                    
+                    fig3, ax3 = plt.subplots(figsize=(14, 5))
+                    
+                    # Histogram of fraud probabilities
+                    ax3.hist(df['Fraud_Probability'], bins=50, color='#3b82f6', 
+                            alpha=0.7, edgecolor='black')
+                    ax3.axvline(x=30, color='#f59e0b', linestyle='--', linewidth=2, 
+                               label='Medium Risk Threshold (30%)')
+                    ax3.axvline(x=70, color='#ef4444', linestyle='--', linewidth=2, 
+                               label='High Risk Threshold (70%)')
+                    ax3.set_xlabel('Fraud Probability (%)', fontsize=12, fontweight='bold')
+                    ax3.set_ylabel('Number of Transactions', fontsize=12, fontweight='bold')
+                    ax3.set_title('Distribution of Fraud Probabilities', fontsize=13, fontweight='bold')
+                    ax3.legend(fontsize=10)
+                    ax3.grid(alpha=0.3, axis='y')
+                    
+                    plt.tight_layout()
+                    st.pyplot(fig3)
+                    
+                    st.markdown("---")
+                    st.markdown("### 📋 Detailed Results")
                     
                     st.dataframe(df[['Result', 'Risk_Level', 'Fraud_Probability']].head(20))
                     
