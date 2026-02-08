@@ -9,29 +9,72 @@ from sklearn.preprocessing import StandardScaler
 # Page configuration
 st.set_page_config(
     page_title="Credit Card Fraud Detection",
-    page_icon="💳",
-    layout="wide"
+    page_icon="🔒",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Custom CSS for professional styling
 st.markdown("""
     <style>
     .main-header {
-        font-size: 3rem;
-        color: #1f77b4;
+        font-size: 2.5rem;
+        color: #1e3a8a;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
     }
-    .sub-header {
+    .risk-high {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
         font-size: 1.5rem;
-        color: #ff7f0e;
-        margin-top: 2rem;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+    }
+    .risk-medium {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);
+    }
+    .risk-low {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
     }
     .metric-card {
-        background-color: #f0f2f6;
+        background: #f8fafc;
         padding: 1.5rem;
-        border-radius: 0.5rem;
-        text-align: center;
+        border-radius: 10px;
+        border-left: 4px solid #3b82f6;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .action-card {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 0.5rem 0;
+        color: #000000;
+    }
+    .action-card h4 {
+        color: #000000;
+        margin-top: 0;
+    }
+    .action-card li, .action-card p, .action-card strong {
+        color: #000000;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -45,255 +88,448 @@ def load_models():
         scaler = joblib.load('Models/scaler.pkl')
         return lr_model, rf_model, scaler
     except Exception as e:
-        st.error(f"Error loading models: {e}")
+        st.error(f"⚠️ Error loading models: {e}")
         return None, None, None
 
 lr_model, rf_model, scaler = load_models()
 
 # Title
-st.markdown('<h1 class="main-header">💳 Credit Card Fraud Detection System</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">🔒 Credit Card Fraud Detection System</h1>', unsafe_allow_html=True)
 st.markdown("---")
 
 # Sidebar
-st.sidebar.header("📋 Navigation")
-page = st.sidebar.radio("Go to", ["🏠 Home", "🔍 Single Prediction", "📊 Batch Prediction", "📈 Model Performance"])
+st.sidebar.markdown("### 📊 Navigation")
+page = st.sidebar.radio("Select Page", 
+                        ["🏠 Home", "🔍 Single Prediction", "📁 Batch Prediction", "📈 Model Performance"],
+                        label_visibility="collapsed")
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("### ℹ️ About")
+st.sidebar.info("""
+**Fraud Detection System**
+
+Built with Machine Learning to identify fraudulent credit card transactions in real-time.
+
+**Key Features:**
+- Multiple ML models
+- 87.84% fraud detection rate
+- Real-time predictions
+- Explainable AI
+""")
 
 # Home Page
 if page == "🏠 Home":
-    st.markdown("## Welcome to the Fraud Detection System!")
+    st.markdown("## 📋 System Overview")
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("Dataset Size", "284,807 transactions")
+        st.metric("📊 Dataset Size", "284,807", help="Total transactions analyzed")
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("Fraud Rate", "0.173%")
+        st.metric("⚠️ Fraud Rate", "0.173%", help="Percentage of fraudulent transactions")
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("Best Model Recall", "87.84%")
+        st.metric("✅ Best Recall", "87.84%", delta="↑ 26.35%", help="Improvement over baseline")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.metric("🎯 Accuracy", "99.81%", help="Random Forest model accuracy")
         st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     
-    st.markdown("### 🎯 Project Overview")
-    st.write("""
-    This application uses machine learning to detect fraudulent credit card transactions.
-    The models were trained on a highly imbalanced dataset with only 0.173% fraudulent transactions.
+    col1, col2 = st.columns([3, 2])
     
-    **Key Features:**
-    - ✅ Multiple ML models (Logistic Regression, Random Forest)
-    - ✅ SMOTE technique to handle class imbalance
-    - ✅ High recall rate (87.84%) to minimize missed frauds
-    - ✅ Real-time predictions on new transactions
-    """)
+    with col1:
+        st.markdown("### 🎯 Project Overview")
+        st.write("""
+        This application uses advanced machine learning algorithms to detect fraudulent credit card transactions 
+        in real-time. The system was trained on a highly imbalanced dataset with only 0.173% fraudulent transactions.
+        
+        **🔑 Key Capabilities:**
+        - Real-time fraud detection with 87.84% recall rate
+        - Multiple ML models (Logistic Regression, Random Forest, XGBoost)
+        - SMOTE technique to handle severe class imbalance
+        - Explainable AI - understand why transactions are flagged
+        - Batch processing for multiple transactions
+        - Professional risk assessment and recommendations
+        """)
     
-    st.markdown("### 📊 Model Performance Summary")
+    with col2:
+        st.markdown("### 📊 Model Performance")
+        performance_data = {
+            'Model': ['LR + SMOTE', 'Random Forest', 'XGBoost'],
+            'Recall': [87.84, 81.08, 83.78],
+            'Precision': [6, 47, 36],
+            'Accuracy': [97.73, 99.81, 99.72]
+        }
+        df_performance = pd.DataFrame(performance_data)
+        st.dataframe(df_performance, use_container_width=True, hide_index=True)
     
-    performance_data = {
-        'Model': ['LR + SMOTE', 'Random Forest', 'XGBoost'],
-        'Accuracy': ['97.73%', '99.81%', '99.72%'],
-        'Recall': ['87.84%', '81.08%', '83.78%'],
-        'Precision': ['6%', '47%', '36%']
-    }
+    st.markdown("---")
+    st.markdown("### 💡 How It Works")
     
-    df_performance = pd.DataFrame(performance_data)
-    st.table(df_performance)
+    col1, col2, col3, col4 = st.columns(4)
     
-    st.info("💡 **Note:** Higher recall means we catch more frauds, but may have more false alarms.")
+    with col1:
+        st.markdown("#### 1️⃣ Data Input")
+        st.write("Transaction details are collected and preprocessed")
+    
+    with col2:
+        st.markdown("#### 2️⃣ Analysis")
+        st.write("Multiple ML models analyze the transaction")
+    
+    with col3:
+        st.markdown("#### 3️⃣ Prediction")
+        st.write("System provides fraud probability and risk level")
+    
+    with col4:
+        st.markdown("#### 4️⃣ Action")
+        st.write("Recommended actions based on risk assessment")
 
 # Single Prediction Page
 elif page == "🔍 Single Prediction":
-    st.markdown("## 🔍 Single Transaction Prediction")
-    st.write("Enter transaction details to check if it's fraudulent:")
+    st.markdown("## 🔍 Transaction Analysis & Prediction")
     
-    # Model selection
-    model_choice = st.selectbox("Select Model", ["Logistic Regression + SMOTE (Best Recall)", "Random Forest (Best Balance)"])
+    input_method = st.radio("📥 Input Method", ["🎲 Random Sample", "✍️ Manual Entry"], horizontal=True)
     
     st.markdown("---")
     
-    # Input method
-    input_method = st.radio("Input Method", ["Manual Entry", "Random Sample"])
-    
-    if input_method == "Manual Entry":
-        st.markdown("### Enter Transaction Features:")
+    if input_method == "✍️ Manual Entry":
+        st.markdown("### 📝 Enter Transaction Features")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            time = st.number_input("Time (seconds since first transaction)", min_value=0.0, value=0.0)
-            amount = st.number_input("Transaction Amount ($)", min_value=0.0, value=100.0)
-            v1 = st.number_input("V1", value=0.0)
-            v2 = st.number_input("V2", value=0.0)
-            v3 = st.number_input("V3", value=0.0)
-            v4 = st.number_input("V4", value=0.0)
-            v5 = st.number_input("V5", value=0.0)
-            v6 = st.number_input("V6", value=0.0)
-            v7 = st.number_input("V7", value=0.0)
-            v8 = st.number_input("V8", value=0.0)
-            v9 = st.number_input("V9", value=0.0)
-            v10 = st.number_input("V10", value=0.0)
-            v11 = st.number_input("V11", value=0.0)
-            v12 = st.number_input("V12", value=0.0)
-            v13 = st.number_input("V13", value=0.0)
+            time = st.number_input("⏱️ Time (seconds)", min_value=0.0, value=0.0)
+            amount = st.number_input("💵 Amount ($)", min_value=0.0, value=100.0)
+            st.markdown("**🔢 PCA Features (V1-V14)**")
+            v1 = st.number_input("V1", value=0.0, format="%.6f")
+            v2 = st.number_input("V2", value=0.0, format="%.6f")
+            v3 = st.number_input("V3", value=0.0, format="%.6f")
+            v4 = st.number_input("V4", value=0.0, format="%.6f")
+            v5 = st.number_input("V5", value=0.0, format="%.6f")
+            v6 = st.number_input("V6", value=0.0, format="%.6f")
+            v7 = st.number_input("V7", value=0.0, format="%.6f")
+            v8 = st.number_input("V8", value=0.0, format="%.6f")
+            v9 = st.number_input("V9", value=0.0, format="%.6f")
+            v10 = st.number_input("V10", value=0.0, format="%.6f")
+            v11 = st.number_input("V11", value=0.0, format="%.6f")
+            v12 = st.number_input("V12", value=0.0, format="%.6f")
+            v13 = st.number_input("V13", value=0.0, format="%.6f")
+            v14 = st.number_input("V14", value=0.0, format="%.6f")
         
         with col2:
-            v14 = st.number_input("V14", value=0.0)
-            v15 = st.number_input("V15", value=0.0)
-            v16 = st.number_input("V16", value=0.0)
-            v17 = st.number_input("V17", value=0.0)
-            v18 = st.number_input("V18", value=0.0)
-            v19 = st.number_input("V19", value=0.0)
-            v20 = st.number_input("V20", value=0.0)
-            v21 = st.number_input("V21", value=0.0)
-            v22 = st.number_input("V22", value=0.0)
-            v23 = st.number_input("V23", value=0.0)
-            v24 = st.number_input("V24", value=0.0)
-            v25 = st.number_input("V25", value=0.0)
-            v26 = st.number_input("V26", value=0.0)
-            v27 = st.number_input("V27", value=0.0)
-            v28 = st.number_input("V28", value=0.0)
+            st.markdown("**🔢 PCA Features (V15-V28)**")
+            v15 = st.number_input("V15", value=0.0, format="%.6f")
+            v16 = st.number_input("V16", value=0.0, format="%.6f")
+            v17 = st.number_input("V17", value=0.0, format="%.6f")
+            v18 = st.number_input("V18", value=0.0, format="%.6f")
+            v19 = st.number_input("V19", value=0.0, format="%.6f")
+            v20 = st.number_input("V20", value=0.0, format="%.6f")
+            v21 = st.number_input("V21", value=0.0, format="%.6f")
+            v22 = st.number_input("V22", value=0.0, format="%.6f")
+            v23 = st.number_input("V23", value=0.0, format="%.6f")
+            v24 = st.number_input("V24", value=0.0, format="%.6f")
+            v25 = st.number_input("V25", value=0.0, format="%.6f")
+            v26 = st.number_input("V26", value=0.0, format="%.6f")
+            v27 = st.number_input("V27", value=0.0, format="%.6f")
+            v28 = st.number_input("V28", value=0.0, format="%.6f")
         
-        # Create feature array
         features = np.array([[v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14,
                              v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v26, v27, v28]])
         
-        # Scale time and amount
         scaled_time = scaler.transform([[time]])[0][0] if scaler else time
         scaled_amount = scaler.transform([[amount]])[0][0] if scaler else amount
         
-        # Combine all features
         final_features = np.concatenate([features, [[scaled_amount, scaled_time]]], axis=1)
     
-    else:  # Random Sample
-        st.info("📌 Generating a random sample transaction...")
-        # Generate random features
+    else:
+        st.info("🎲 Generating random transaction sample...")
         features = np.random.randn(1, 28)
         time = np.random.uniform(0, 172792)
-        amount = np.random.uniform(0, 500)
+        amount = np.random.uniform(10, 500)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("💵 Transaction Amount", f"${amount:.2f}")
+        with col2:
+            st.metric("⏱️ Time", f"{time:.0f} seconds")
         
         scaled_time = scaler.transform([[time]])[0][0] if scaler else time
         scaled_amount = scaler.transform([[amount]])[0][0] if scaler else amount
         
         final_features = np.concatenate([features, [[scaled_amount, scaled_time]]], axis=1)
         
-        st.write(f"**Amount:** ${amount:.2f}")
-        st.write(f"**Time:** {time:.2f} seconds")
+        v_features = features[0]
+        v14, v17, v12, v10, v4 = v_features[13], v_features[16], v_features[11], v_features[9], v_features[3]
     
-    # Predict button
-    if st.button("🔮 Predict", type="primary"):
-        if model_choice == "Logistic Regression + SMOTE (Best Recall)":
-            model = lr_model
-        else:
-            model = rf_model
-        
-        if model:
-            # Make prediction
-            prediction = model.predict(final_features)[0]
-            probability = model.predict_proba(final_features)[0]
+    st.markdown("---")
+    
+    if st.button("🔮 Analyze Transaction", type="primary", use_container_width=True):
+        if lr_model and rf_model:
+            pred_lr = lr_model.predict(final_features)[0]
+            prob_lr = lr_model.predict_proba(final_features)[0]
+            
+            pred_rf = rf_model.predict(final_features)[0]
+            prob_rf = rf_model.predict_proba(final_features)[0]
+            
+            avg_fraud_prob = (prob_lr[1] + prob_rf[1]) / 2
+            
+            if avg_fraud_prob >= 0.7:
+                risk_level = "HIGH"
+                risk_class = "risk-high"
+                risk_icon = "🔴"
+            elif avg_fraud_prob >= 0.3:
+                risk_level = "MEDIUM"
+                risk_class = "risk-medium"
+                risk_icon = "🟡"
+            else:
+                risk_level = "LOW"
+                risk_class = "risk-low"
+                risk_icon = "🟢"
             
             st.markdown("---")
-            st.markdown("### 🎯 Prediction Result")
+            st.markdown(f'<div class="{risk_class}">{risk_icon} RISK LEVEL: {risk_level}</div>', unsafe_allow_html=True)
+            st.markdown("---")
             
-            col1, col2 = st.columns(2)
+            col1, col2 = st.columns([1, 1])
             
             with col1:
-                if prediction == 1:
-                    st.error("⚠️ **FRAUDULENT TRANSACTION DETECTED!**")
-                    st.markdown(f"**Fraud Probability:** {probability[1]*100:.2f}%")
+                st.markdown("### 📊 Prediction Results")
+                
+                # Create side-by-side comparison
+                fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+                
+                # Logistic Regression
+                colors_prob = ['#10b981', '#ef4444']
+                probabilities_lr = [prob_lr[0]*100, prob_lr[1]*100]
+                labels = ['Legitimate', 'Fraud']
+                
+                bars1 = ax1.barh(labels, probabilities_lr, color=colors_prob)
+                ax1.set_xlabel('Probability (%)', fontsize=11)
+                ax1.set_title(f'Logistic Regression\nFraud: {prob_lr[1]*100:.1f}%', fontsize=12, fontweight='bold')
+                ax1.set_xlim([0, 100])
+                
+                for i, (bar, val) in enumerate(zip(bars1, probabilities_lr)):
+                    ax1.text(val + 2, i, f'{val:.1f}%', va='center', fontweight='bold', fontsize=10)
+                
+                # Random Forest
+                probabilities_rf = [prob_rf[0]*100, prob_rf[1]*100]
+                
+                bars2 = ax2.barh(labels, probabilities_rf, color=colors_prob)
+                ax2.set_xlabel('Probability (%)', fontsize=11)
+                ax2.set_title(f'Random Forest\nFraud: {prob_rf[1]*100:.1f}%', fontsize=12, fontweight='bold')
+                ax2.set_xlim([0, 100])
+                
+                for i, (bar, val) in enumerate(zip(bars2, probabilities_rf)):
+                    ax2.text(val + 2, i, f'{val:.1f}%', va='center', fontweight='bold', fontsize=10)
+                
+                plt.tight_layout()
+                st.pyplot(fig)
+                
+                # Show consensus metric
+                diff = abs(prob_lr[1] - prob_rf[1]) * 100
+                avg_fraud_prob = (prob_lr[1] + prob_rf[1]) / 2
+                
+                col_consensus1, col_consensus2 = st.columns(2)
+                with col_consensus1:
+                    st.metric("📊 Average Fraud Probability", f"{avg_fraud_prob*100:.1f}%")
+                with col_consensus2:
+                    if diff < 10:
+                        st.metric("🎯 Model Agreement", "Strong", delta="High Confidence", delta_color="normal")
+                    elif diff < 30:
+                        st.metric("🎯 Model Agreement", "Moderate", delta="Review Recommended", delta_color="off")
+                    else:
+                        st.metric("🎯 Model Agreement", "Weak", delta="Manual Review Required", delta_color="inverse")
+                
+                st.markdown("### 🤖 Model Consensus")
+                
+                consensus = sum([pred_lr, pred_rf])
+                st.markdown(f"**Models Predicting Fraud:** {consensus}/2")
+                
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    st.metric("🔹 Logistic Regression", 
+                             "FRAUD" if pred_lr == 1 else "LEGITIMATE",
+                             f"{prob_lr[1]*100:.1f}%")
+                with col_b:
+                    st.metric("🔹 Random Forest", 
+                             "FRAUD" if pred_rf == 1 else "LEGITIMATE",
+                             f"{prob_rf[1]*100:.1f}%")
+                
+                if consensus == 2:
+                    st.success("✅ Strong consensus: Both models agree")
+                elif consensus == 1:
+                    st.warning("⚠️ Moderate confidence: Models disagree")
                 else:
-                    st.success("✅ **LEGITIMATE TRANSACTION**")
-                    st.markdown(f"**Legitimate Probability:** {probability[0]*100:.2f}%")
+                    st.info("✅ Both models predict legitimate")
             
             with col2:
-                # Probability visualization
-                fig, ax = plt.subplots(figsize=(6, 4))
-                labels = ['Legitimate', 'Fraud']
-                colors = ['#66b3ff', '#ff6b6b']
-                ax.bar(labels, probability, color=colors)
-                ax.set_ylabel('Probability')
-                ax.set_title('Prediction Confidence')
-                ax.set_ylim([0, 1])
-                for i, v in enumerate(probability):
-                    ax.text(i, v + 0.02, f'{v*100:.1f}%', ha='center', fontweight='bold')
-                st.pyplot(fig)
+                st.markdown("### 🔍 Feature Analysis")
+                
+                feature_names = [f'V{i}' for i in range(1, 29)] + ['scaled_amount', 'scaled_time']
+                feature_values = final_features[0]
+                
+                if hasattr(rf_model, 'feature_importances_'):
+                    importances = rf_model.feature_importances_
+                    
+                    feature_importance_df = pd.DataFrame({
+                        'Feature': feature_names,
+                        'Value': feature_values,
+                        'Importance': importances
+                    })
+                    
+                    top_features = feature_importance_df.nlargest(5, 'Importance')
+                    
+                    st.markdown("**Top 5 Contributing Features:**")
+                    
+                    for idx, row in top_features.iterrows():
+                        feature = row['Feature']
+                        value = row['Value']
+                        importance = row['Importance']
+                        
+                        if feature in ['V14', 'V17', 'V12'] and value < -1:
+                            indicator = "⚠️ High Risk"
+                            bg_color = "#fee2e2"
+                            text_color = "#000000"
+                            border_color = "#ef4444"
+                        elif abs(value) > 2:
+                            indicator = "⚠️ Unusual"
+                            bg_color = "#fef3c7"
+                            text_color = "#000000"
+                            border_color = "#f59e0b"
+                        else:
+                            indicator = "✅ Normal"
+                            bg_color = "#d1fae5"
+                            text_color = "#000000"
+                            border_color = "#10b981"
+                        
+                        st.markdown(f"""
+                        <div style="background-color: {bg_color}; color: {text_color}; padding: 12px; border-radius: 8px; margin: 8px 0; border-left: 4px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <strong style="font-size: 1.1em; color: {text_color};">{feature}</strong>: <span style="color: {text_color}; font-weight: 700;">{value:.4f}</span><br>
+                            <span style="color: {text_color}; font-size: 0.95em; font-weight: 500;">Importance: {importance:.4f} | {indicator}</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                st.markdown("---")
+                st.markdown("**📋 Transaction Details:**")
+                st.write(f"**Amount:** ${amount:.2f}")
+                st.write(f"**Time:** {time:.0f} seconds")
+                
+                time_hours = (time % 86400) / 3600
+                if 23 <= time_hours or time_hours <= 5:
+                    st.warning("⚠️ **Late night transaction** (High risk)")
+                else:
+                    st.info("✅ Normal transaction time")
+            
+            st.markdown("---")
+            st.markdown("### 📝 Recommended Actions")
+            
+            if risk_level == "HIGH":
+                st.markdown("""
+                <div class="action-card" style="color: #000000;">
+                    <h4 style="color: #000000;">🔴 High Risk - Immediate Action Required</h4>
+                    <ol style="color: #000000;">
+                        <li style="color: #000000;"><strong style="color: #000000;">🚫 Block Transaction</strong></li>
+                        <li style="color: #000000;"><strong style="color: #000000;">📞 Contact Customer</strong></li>
+                        <li style="color: #000000;"><strong style="color: #000000;">🔒 Freeze Card</strong></li>
+                        <li style="color: #000000;"><strong style="color: #000000;">📧 Send Alert</strong></li>
+                        <li style="color: #000000;"><strong style="color: #000000;">📊 Manual Review</strong></li>
+                    </ol>
+                    <p style="color: #000000;"><strong style="color: #000000;">💰 Estimated Loss if Fraud:</strong> ${:.2f}</p>
+                </div>
+                """.format(amount), unsafe_allow_html=True)
+            elif risk_level == "MEDIUM":
+                st.markdown("""
+                <div class="action-card" style="color: #000000;">
+                    <h4 style="color: #000000;">🟡 Medium Risk - Verification Recommended</h4>
+                    <ol style="color: #000000;">
+                        <li style="color: #000000;"><strong style="color: #000000;">✉️ Send Verification</strong></li>
+                        <li style="color: #000000;"><strong style="color: #000000;">⏸️ Delay Processing</strong></li>
+                        <li style="color: #000000;"><strong style="color: #000000;">👁️ Monitor Activity</strong></li>
+                    </ol>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div class="action-card" style="background: #d1fae5; border-left-color: #10b981; color: #000000;">
+                    <h4 style="color: #000000;">🟢 Low Risk - Safe to Process</h4>
+                    <ol style="color: #000000;">
+                        <li style="color: #000000;"><strong style="color: #000000;">✅ Approve Transaction</strong></li>
+                        <li style="color: #000000;"><strong style="color: #000000;">📊 Standard Monitoring</strong></li>
+                    </ol>
+                </div>
+                """, unsafe_allow_html=True)
 
 # Batch Prediction Page
-elif page == "📊 Batch Prediction":
-    st.markdown("## 📊 Batch Prediction")
-    st.write("Upload a CSV file with multiple transactions to get predictions:")
+elif page == "📁 Batch Prediction":
+    st.markdown("## 📁 Batch Transaction Analysis")
     
-    # Model selection
-    model_choice = st.selectbox("Select Model", ["Logistic Regression + SMOTE", "Random Forest"])
+    model_choice = st.selectbox("🤖 Select Model", 
+                                ["Logistic Regression + SMOTE", "Random Forest"])
     
-    # File uploader
-    uploaded_file = st.file_uploader("Upload CSV file", type=['csv'])
+    st.markdown("---")
+    uploaded_file = st.file_uploader("Choose CSV file", type=['csv'])
     
     if uploaded_file is not None:
         try:
             df = pd.read_csv(uploaded_file)
-            st.success(f"✅ File uploaded successfully! {len(df)} transactions found.")
+            st.success(f"✅ File uploaded! Found **{len(df):,}** transactions")
+            st.dataframe(df.head(10), use_container_width=True)
             
-            st.markdown("### Preview of uploaded data:")
-            st.dataframe(df.head())
-            
-            if st.button("🔮 Predict All", type="primary"):
-                model = lr_model if model_choice == "Logistic Regression + SMOTE" else rf_model
+            if st.button("🔮 Analyze All", type="primary", use_container_width=True):
+                model = lr_model if "Logistic" in model_choice else rf_model
                 
                 if model:
-                    # Make predictions
                     predictions = model.predict(df)
                     probabilities = model.predict_proba(df)
                     
-                    # Add results to dataframe
                     df['Prediction'] = predictions
-                    df['Fraud_Probability'] = probabilities[:, 1]
-                    df['Result'] = df['Prediction'].apply(lambda x: 'Fraud' if x == 1 else 'Legitimate')
+                    df['Fraud_Probability'] = probabilities[:, 1] * 100
+                    df['Risk_Level'] = df['Fraud_Probability'].apply(
+                        lambda x: 'HIGH' if x >= 70 else ('MEDIUM' if x >= 30 else 'LOW')
+                    )
+                    df['Result'] = df['Prediction'].apply(lambda x: 'FRAUD' if x == 1 else 'LEGITIMATE')
                     
-                    st.markdown("---")
-                    st.markdown("### 📋 Prediction Results")
-                    
-                    col1, col2, col3 = st.columns(3)
+                    st.success("✅ Analysis complete!")
                     
                     fraud_count = (predictions == 1).sum()
                     legitimate_count = (predictions == 0).sum()
                     
+                    col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.metric("Total Transactions", len(df))
+                        st.metric("📋 Total", len(df))
                     with col2:
-                        st.metric("Fraudulent", fraud_count, delta=f"{fraud_count/len(df)*100:.2f}%")
+                        st.metric("🔴 Fraudulent", fraud_count)
                     with col3:
-                        st.metric("Legitimate", legitimate_count, delta=f"{legitimate_count/len(df)*100:.2f}%")
+                        st.metric("🟢 Legitimate", legitimate_count)
                     
-                    st.markdown("### Results Table:")
-                    st.dataframe(df[['Prediction', 'Fraud_Probability', 'Result']].head(20))
+                    st.dataframe(df[['Result', 'Risk_Level', 'Fraud_Probability']].head(20))
                     
-                    # Download results
                     csv = df.to_csv(index=False)
                     st.download_button(
-                        label="📥 Download Results as CSV",
+                        label="📥 Download Results",
                         data=csv,
-                        file_name="fraud_predictions.csv",
+                        file_name="fraud_results.csv",
                         mime="text/csv"
                     )
-        
         except Exception as e:
-            st.error(f"Error processing file: {e}")
+            st.error(f"❌ Error: {e}")
 
 # Model Performance Page
 else:
     st.markdown("## 📈 Model Performance Analysis")
     
-    st.markdown("### 🎯 Key Metrics Comparison")
-    
-    # Performance table
     performance_data = {
-        'Model': ['Logistic Regression (Baseline)', 'LR + SMOTE', 'Random Forest', 'XGBoost'],
+        'Model': ['LR (Baseline)', 'LR + SMOTE', 'Random Forest', 'XGBoost'],
         'Accuracy (%)': [99.92, 97.73, 99.81, 99.72],
         'Recall (%)': [61.49, 87.84, 81.08, 83.78],
         'Precision (%)': [86, 6, 47, 36],
@@ -302,7 +538,7 @@ else:
     }
     
     df_perf = pd.DataFrame(performance_data)
-    st.dataframe(df_perf, use_container_width=True)
+    st.dataframe(df_perf, use_container_width=True, hide_index=True)
     
     st.markdown("---")
     
@@ -310,44 +546,26 @@ else:
     
     with col1:
         st.markdown("### 📊 Recall Comparison")
-        fig, ax = plt.subplots(figsize=(8, 5))
-        colors = ['#ff9999', '#66b3ff', '#99ff99', '#ffcc99']
-        ax.barh(df_perf['Model'], df_perf['Recall (%)'], color=colors)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        colors = ['#94a3b8', '#3b82f6', '#10b981', '#f59e0b']
+        bars = ax.barh(df_perf['Model'], df_perf['Recall (%)'], color=colors)
         ax.set_xlabel('Recall (%)')
-        ax.set_title('Model Recall (Fraud Detection Rate)')
+        ax.set_title('Fraud Detection Rate')
         plt.tight_layout()
         st.pyplot(fig)
     
     with col2:
         st.markdown("### 📊 Frauds Caught vs Missed")
-        fig, ax = plt.subplots(figsize=(8, 5))
+        fig, ax = plt.subplots(figsize=(10, 6))
         x = np.arange(len(df_perf))
         width = 0.35
-        ax.bar(x - width/2, df_perf['Frauds Caught'], width, label='Caught', color='#66b3ff')
-        ax.bar(x + width/2, df_perf['Frauds Missed'], width, label='Missed', color='#ff9999')
-        ax.set_ylabel('Number of Frauds')
-        ax.set_title('Frauds Caught vs Missed (out of 148)')
+        ax.bar(x - width/2, df_perf['Frauds Caught'], width, label='Caught', color='#10b981')
+        ax.bar(x + width/2, df_perf['Frauds Missed'], width, label='Missed', color='#ef4444')
         ax.set_xticks(x)
-        ax.set_xticklabels(df_perf['Model'], rotation=45, ha='right')
+        ax.set_xticklabels(df_perf['Model'], rotation=15)
         ax.legend()
         plt.tight_layout()
         st.pyplot(fig)
-    
-    st.markdown("---")
-    
-    st.markdown("### 💡 Key Insights")
-    st.info("""
-    - **LR + SMOTE** achieves the highest recall (87.84%), catching 130 out of 148 frauds
-    - **Random Forest** offers the best balance with 99.81% accuracy and 81% recall
-    - **SMOTE technique** significantly improved fraud detection from 61% to 88% recall
-    - Trade-off: Higher recall comes with lower precision (more false alarms)
-    - In fraud detection, catching frauds is more critical than false positives
-    """)
 
-# Footer
 st.markdown("---")
-st.markdown("""
-    <div style='text-align: center; color: gray;'>
-        <p>Built with Streamlit | Credit Card Fraud Detection ML Project</p>
-    </div>
-""", unsafe_allow_html=True)
+st.markdown("<div style='text-align: center; color: #64748b;'><p>🔒 Credit Card Fraud Detection System</p></div>", unsafe_allow_html=True)
