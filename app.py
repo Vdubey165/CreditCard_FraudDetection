@@ -114,7 +114,7 @@ Built with Machine Learning to identify fraudulent credit card transactions in r
 - Multiple ML models
 - 87.84% fraud detection rate
 - Real-time predictions
-- Explainable AI
+- Feature importance analysis
 """)
 
 # Home Page
@@ -157,7 +157,7 @@ if page == "🏠 Home":
         - Real-time fraud detection with 87.84% recall rate
         - Multiple ML models (Logistic Regression, Random Forest, XGBoost)
         - SMOTE technique to handle severe class imbalance
-        - Explainable AI - understand why transactions are flagged
+        - Feature importance analysis - see which signals contribute to predictions
         - Batch processing for multiple transactions
         - Professional risk assessment and recommendations
         """)
@@ -426,9 +426,13 @@ elif page == "🔍 Single Prediction":
                 
                 time_hours = (time % 86400) / 3600
                 if 23 <= time_hours or time_hours <= 5:
-                    st.warning("⚠️ **Late night transaction** (High risk)")
+                    st.warning("⚠️ **Late night transaction** (High risk period)")
                 else:
                     st.info("✅ Normal transaction time")
+                
+                # Add clarification about risk signals
+                st.markdown("---")
+                st.info("ℹ️ **Note:** Individual risk indicators (time, amount) are contextual signals. Final risk assessment is based on ML model probability combining all 30 features.")
             
             st.markdown("---")
             st.markdown("### 📝 Recommended Actions")
